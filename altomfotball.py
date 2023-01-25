@@ -142,14 +142,14 @@ Ukens kamper på TV3+:
 {free}
 """
 
-# if len(av) == 0 and len(free) == 0:
-# 	send_email(email_receiver, subject, no_games)
+if len(av) == 0 and len(free) == 0:
+	send_email(email_receiver, subject, no_games)
 
-# elif len(free) == 0:
-# 	send_email(email_receiver, subject, av_games)
+elif len(free) == 0:
+	send_email(email_receiver, subject, av_games)
 
-# elif len(av) == 0:
-# 	send_email(email_receiver, subject, free_games)
+elif len(av) == 0:
+	send_email(email_receiver, subject, free_games)
 
-# else:
-# 	send_email(email_receiver, subject, body)
+else:
+	send_email(email_receiver, subject, body)
