@@ -1,3 +1,3 @@
 # Fotballkalender
 
-Program that scrapes the website altomfotball.no and sends mails to alert when matches are available to watch for free on TV3+
+Program that scrapes the website altomfotball.no and sends weekly summary of when matches are available to watch for free on TV3+
