@@ -8,7 +8,7 @@ import datetime as dt
 from bs4 import BeautifulSoup
 from email.message import EmailMessage
 
-load_dotenv(".env")
+load_dotenv("Documents/Prosjekter/fotballkalender/.env")
 
 email_sender = os.environ.get('USERNAME')
 email_password = os.environ.get('PASSWORD')
@@ -19,10 +19,9 @@ email_receiver = 'm.gjestrud@gmail.com'
 # username = config('USERNAME', default='')
 # password = config('PASSQORD', default='')
 
-# print(username, password)
+# print(email_sender, email_password)
 
 # response = requests.get("https://www.altomfotball.no/elementsCommonAjax.do?cmd=fixturesContent&seasonId=344&teamId=732&month=all&useFullUrl=false")
-# response = requests.get("https://www.altomfotball.no/elementsCommonAjax.do?cmd=fixturesContent&tournamentId=230&month=all&useFullUrl=false")
 
 def cook(link):
 	response = requests.get(link)
@@ -105,26 +104,15 @@ week2 = get_week(data2)
 # print(week)
 
 def get_team(week, name):
-	name.replace(' ', chr(160))    # For some reason the name is Aston + non-breaking space + Villa
+	name.replace(' ', chr(160))    
 	team = pd.DataFrame()
 	for i in range(len(week)):
-		if week['Home'][i] == name or week['Away'][i] == name:
+		if week['Home'][i] == name or week['Away'][i] == name:		# Only necessary for Aston Villa, since we look at the whole league
 			team = team.append(week.iloc[i])
 	team = team.reset_index(drop=True)
 	return team
-
-def get_aston_villa(week):
-	av = pd.DataFrame()
-	astonvilla = 'Aston' + chr(160) + 'Villa' 
 	
-	for i in range(len(week)):
-		if week['Home'][i] == astonvilla or week['Away'][i] == astonvilla:
-			av = av.append(week.iloc[i])
-	av = av.reset_index(drop=True)
-	return av
-	
-av = get_team(week1, 'Aston' + chr(160) + 'Villa')
-
+av = get_team(week1, 'Aston' + chr(160) + 'Villa')		# For some reason we have to use non-breaking space instead of space
 bmg = get_team(week2, "M'gladbach")
 
 def get_free(week):
@@ -179,18 +167,21 @@ av_games = f"""
 Her er Kamper de neste 14 dagene for Aston Villa:
 
 {av}
+
 """
 
 free_games = f"""
 Kamper de neste 14 dagene på TV3+:
 
 {free}
+
 """
 
 bmg_games = f"""
 Kamper de neste 14 dagene for Borussia Mönchengladbach:
 
 {bmg}
+
 """
 
 def mail(email_receiver, subject, body, av, free, bmg):
