@@ -7,8 +7,11 @@ import requests
 import datetime as dt
 from bs4 import BeautifulSoup
 from email.message import EmailMessage
+from tabulate import tabulate
 
-load_dotenv("Documents/Prosjekter/fotballkalender/.env")
+
+load_dotenv(".env")
+load_dotenv("Documents/Prosjekter/fotballkalender/.env")  # my specific path
 
 email_sender = os.environ.get('USERNAME')
 email_password = os.environ.get('PASSWORD')
@@ -71,20 +74,22 @@ def build_data(soup, dates, name):
 	channels = [' '.join(r.text.split(' ')) for r in all_channels]
 	# print(channels)
 
-
+	for i in range(len(times)):
+		# print(times[i])
+		if '.' in times[i]:
+			timedelta = dt.timedelta(hours=int(times[i].split('.')[0]), minutes=int(times[i].split('.')[1]))
+			dates[i] = dates[i] + timedelta
+	matches = [home[i] + ' - ' + away[i] for i in range(len(home))]
+			
+	# print(dates)
 	data = pd.DataFrame()
 	data['Date'] = dates
-	data['Home'] = home
-	data['Time'] = times
-	data['Away'] = away
+	# data['Home'] = home
+	# data['Away'] = away
+	data['Match'] = matches
 	data['Channel'] = channels
+	# print(data)
 	return data
-
-	# week = get_week(data)
-	# match = get_team(week, name)
-	# free = get_free(week)
-	# team = [match, free]
-
 
 
 data1 = build_data(team1, dates1, 'Aston Villa')
@@ -107,11 +112,22 @@ def get_team(week, name):
 	name.replace(' ', chr(160))    
 	team = pd.DataFrame()
 	for i in range(len(week)):
-		if week['Home'][i] == name or week['Away'][i] == name:		# Only necessary for Aston Villa, since we look at the whole league
+		# print(week['Match'][i].split(' - ')[0], week['Match'][i].split(' - ')[1])
+		if week['Match'][i].split(' - ')[0] == name or week['Match'][i].split(' - ')[1] == name:		# Only necessary for Aston Villa, since we look at the whole league
 			team = team.append(week.iloc[i])
 	team = team.reset_index(drop=True)
 	return team
+
+def pretty_dates(week):
+	pretty = []
+	for i in range(len(week)):
+		pretty.append(week['Date'][i].strftime('%a %d %b %H:%M'))
+	week['Date'] = pretty
+	return week
 	
+week1 = pretty_dates(week1)
+week2 = pretty_dates(week2)
+
 av = get_team(week1, 'Aston' + chr(160) + 'Villa')		# For some reason we have to use non-breaking space instead of space
 bmg = get_team(week2, "M'gladbach")
 
@@ -143,20 +159,20 @@ def send_email(email_receiver, subject, body):
 
 
 subject = 'Kamper de neste 14 dagene'
-body = f"""
-Her er Kamper de neste 14 dagene for Aston Villa:
+# body = f"""
+# Her er Kamper de neste 14 dagene for Aston Villa:
 
-{av}
+# {av}
 
-Kamper de neste 14 dagene på TV3+:
+# Kamper de neste 14 dagene på TV3+:
 
-{free}
+# {free}
 
-Kamper de neste 14 dagene for Borussia Mönchengladbach:
+# Kamper de neste 14 dagene for Borussia Mönchengladbach:
 
-{bmg}
+# {bmg}
 
-"""
+# """
 # print(body)
 
 no_games = """
@@ -166,25 +182,35 @@ Det er ingen kamper å vise.
 av_games = f"""
 Her er Kamper de neste 14 dagene for Aston Villa:
 
-{av}
+{av.set_index('Match')}
+
 
 """
+{tabulate(av, headers='keys', tablefmt='psql', showindex=False)}
+# {av['Home']} {av['Away']} {av['Time']} {av['Channel']}
+print(av_games)
 
 free_games = f"""
 Kamper de neste 14 dagene på TV3+:
 
-{free}
+{free.set_index('Match')}
 
 """
+
+# {tabulate(free, headers='keys', tablefmt='psql', showindex=False)}
+print(free_games)
 
 bmg_games = f"""
 Kamper de neste 14 dagene for Borussia Mönchengladbach:
 
-{bmg}
+{bmg.set_index('Match')}
 
 """
+# {tabulate(bmg, headers='keys', tablefmt='psql', showindex=False)}
 
-def mail(email_receiver, subject, body, av, free, bmg):
+print(bmg_games)
+
+def mail(email_receiver, subject, av, free, bmg):
 	if len(av) == 0 and len(free) == 0 and len(bmg) == 0:
 		send_email(email_receiver, subject, no_games)
 
@@ -208,6 +234,6 @@ def mail(email_receiver, subject, body, av, free, bmg):
 		send_email(email_receiver, subject, av_games + free_games)
 
 	else:
-		send_email(email_receiver, subject, body)
+		send_email(email_receiver, subject, av_games + free_games + bmg_games)
 
-mail(email_receiver, subject, body, av, free, bmg)
+mail(email_receiver, subject, av, free, bmg)
