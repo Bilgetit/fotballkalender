@@ -175,14 +175,10 @@ subject = 'Kamper de neste 14 dagene'
 # """
 # print(body)
 
-no_games = """
-Det er ingen kamper å vise.
-"""
-
 av_games = f"""
 Her er Kamper de neste 14 dagene for Aston Villa:
 
-{av.set_index('Match')}
+{av.set_index('Match') if len(av) > 0 else 'Ingen kamper for Aston Villa'}
 
 
 """
@@ -193,7 +189,7 @@ print(av_games)
 free_games = f"""
 Kamper de neste 14 dagene på TV3+:
 
-{free.set_index('Match')}
+{free.set_index('Match') if len(free) > 0 else 'Ingen kamper på TV3+'}
 
 """
 
@@ -203,7 +199,7 @@ print(free_games)
 bmg_games = f"""
 Kamper de neste 14 dagene for Borussia Mönchengladbach:
 
-{bmg.set_index('Match')}
+{bmg.set_index('Match') if len(bmg) > 0 else 'Ingen kamper for Borussia Mönchengladbach'}
 
 """
 # {tabulate(bmg, headers='keys', tablefmt='psql', showindex=False)}
@@ -211,29 +207,6 @@ Kamper de neste 14 dagene for Borussia Mönchengladbach:
 print(bmg_games)
 
 def mail(email_receiver, subject, av, free, bmg):
-	if len(av) == 0 and len(free) == 0 and len(bmg) == 0:
-		send_email(email_receiver, subject, no_games)
+		send_email(email_receiver, subject, av + free + bmg)
 
-	elif len(free) == 0 and len(bmg) == 0:
-		send_email(email_receiver, subject, av_games)
-
-	elif len(av) == 0 and len(bmg) == 0:
-		print(1)
-		send_email(email_receiver, subject, free_games)
-
-	elif len(av) == 0 and len(free) == 0:
-		send_email(email_receiver, subject, bmg_games)
-
-	elif len(av) == 0:
-		send_email(email_receiver, subject, free_games + bmg_games)
-
-	elif len(free) == 0:
-		send_email(email_receiver, subject, av_games + bmg_games)
-
-	elif len(bmg) == 0:
-		send_email(email_receiver, subject, av_games + free_games)
-
-	else:
-		send_email(email_receiver, subject, av_games + free_games + bmg_games)
-
-mail(email_receiver, subject, av, free, bmg)
+mail(email_receiver, subject, av_games, free_games, bmg_games)
